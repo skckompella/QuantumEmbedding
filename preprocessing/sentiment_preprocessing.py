@@ -1,10 +1,14 @@
 from nltk import word_tokenize
-import string
-import utils
 import re
 
 
 def get_sentences_and_labels(data_file, label_file):
+    """
+
+    :param data_file: File containing the data
+    :param label_file: File to store labels of processed sentences
+    :return: list of sentences, where each sentence is a list of words
+    """
 
     sentences = []
     labels = []
@@ -29,6 +33,11 @@ def get_sentences_and_labels(data_file, label_file):
 
 
 def get_vocabulary(sentences):
+    """
+
+    :param sentences: list of sentences, where each sentence is a list of words
+    :return: set object containing vocabulary
+    """
     vocabulary = set()
 
     for sentence in sentences:
@@ -39,6 +48,12 @@ def get_vocabulary(sentences):
 
 
 def remove_oov_words(sentences, embeddings_file):
+    """
+
+    :param sentences:  list of sentences, where each sentence is a list of words
+    :param embeddings_file: file containing words in the vocabulary, along with their embeddings
+    :return:
+    """
 
     vocab_with_embeddings = set()
 
@@ -54,6 +69,16 @@ def remove_oov_words(sentences, embeddings_file):
 
 
 def get_data_less_than_length(num_len, sentences_file, labels_file, subset_sentences_file, subset_label_file):
+    """
+
+    :param num_len: desired max length
+    :param sentences_file: input file containing the sentences
+    :param labels_file: input file containing the labels
+    :param subset_sentences_file: file where the sentences with length less than num_len will be stored
+    :param subset_label_file: file where labels of above sentences will be stored
+    :return:
+    """
+
     count = 0
     labels = []
     subset_sentences = []
