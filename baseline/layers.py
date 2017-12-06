@@ -5,20 +5,24 @@ import torch.nn.functional as F
 
 
 class RNNEncoder(nn.Module):
-    def __init__(self, input_size, hidden_size, num_layers=1, dropout=0.1):
+    def __init__(self, input_size, hidden_size, batch_size, num_layers=1, dropout=0.1, biderectional=False):
         super(RNNEncoder, self).__init__()
         self.num_layers = num_layers
         self.input_size = input_size
         self.hidden_size = hidden_size
-
-        self.gru = nn.GRU(self.input_size, self.hidden_size, self.num_layers, dropout, batch_first=True)
+        self.batch_size = batch_size
+        self.num_directions = int(biderectional)+1
+        self.gru = nn.GRU(self.input_size, self.hidden_size, self.num_layers, dropout, batch_first=True,
+                          bidirectional=biderectional)
 
     def forward(self, x, hidden):
         output, hidden = self.gru(x, hidden)
         return output, hidden
 
     def initHidden(self, use_cuda=False):
-        result = Variable(torch.zeros(1, 1, self.hidden_size))
+        result = Variable(torch.zeros(self.num_directions*self.num_layers,
+                                      self.batch_size,
+                                      self.hidden_size))
         if use_cuda:
             return result.cuda()
         else:
