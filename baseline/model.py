@@ -50,7 +50,13 @@ class Baseline():
         self.update_params()
 
 
-    def test(self):
-        pass
+    def test(self, x):
+        h0 = self.encoder.initHidden()
+        xes = self.embeds(x)
+        output, hn = self.encoder.forward(xes, h0)
+        scores = self.mlp.forward(output)
+        _, preds = scores.max(1)
+
+        return preds
 
 
