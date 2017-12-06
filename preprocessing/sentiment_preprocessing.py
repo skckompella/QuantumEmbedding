@@ -29,7 +29,7 @@ def get_sentences_and_labels(data_file, label_file):
         for label in labels:
             label_fp.write(label + "\n")
 
-    return sentences
+    return sentences, labels
 
 
 def get_vocabulary(sentences):
@@ -107,6 +107,8 @@ def get_data_less_than_length(num_len, sentences_file, labels_file, subset_sente
     with open(subset_label_file, "w") as l_fp:
         for label in subset_labels:
             l_fp.write(label + "\n")
+
+
 
     return count
 
