@@ -1,6 +1,7 @@
 import torch
 from torch.autograd import Variable
 import torch.nn as nn
+import torch.nn.functional as F
 
 
 class RNNEncoder(nn.Module):
@@ -10,7 +11,7 @@ class RNNEncoder(nn.Module):
         self.input_size = input_size
         self.hidden_size = hidden_size
 
-        self.gru = nn.GRU(self.input_size, self.hidden_size, self.num_layers, dropout)
+        self.gru = nn.GRU(self.input_size, self.hidden_size, self.num_layers, dropout, batch_first=True)
 
     def forward(self, x, hidden):
         output, hidden = self.gru(x, hidden)
@@ -31,14 +32,16 @@ class FeatureExtractor(nn.Module):
         self.layer1 = nn.Linear(input_size, 128)
         self.layer2 = nn.Linear(128, 64)
         self.layer3 = nn.Linear(64, output_size)
+        self.softmax = nn.LogSoftmax()
 
 
     def forward(self, x):
         out1 = self.layer1(x)
         out2 = self.layer2(out1)
         out3 = self.layer3(out2)
+        scores = self.softmax(out3)
 
-        return out3
+        return scores
 
 
 
