@@ -29,7 +29,7 @@ def get_sentences_and_labels(data_file, label_file):
         for label in labels:
             label_fp.write(label + "\n")
 
-    return sentences, labels
+    return sentences
 
 
 def get_vocabulary(sentences):
