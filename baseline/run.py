@@ -34,7 +34,7 @@ def main():
     Y = Variable(torch.LongTensor(labels[:10])) #TODO- change to batch size
 
     # print(X.shape)
-    model = Baseline(word_to_idx, X.shape[0], MAX_LEN)
+    model = Baseline(word_to_idx, X.size()[0], MAX_LEN)
     for e in range(NUM_EPOCHS):
         print("-----------------------" )
         print("  Epoch %d" % e)
