@@ -53,8 +53,11 @@ class Baseline():
         # print(m)
         #
         loss = self.criterion(scores, y)
-        print(loss)
-        print(" Pred = %d | True = %d | Loss = %f " % (preds.data[0], y[0], round(loss.data[0], 2)))
+        # print(loss)
+        # print(preds)
+        # print(y)
+        acc =  float(sum((preds == y)))/y.size()[0]
+        print(" Training accuracy = %f| Loss = %f " % (acc, round(loss.data[0], 2)))
         loss.backward()
         self.update_params()
 
