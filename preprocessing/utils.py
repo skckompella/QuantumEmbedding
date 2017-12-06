@@ -1,3 +1,6 @@
+from nltk import word_tokenize
+import re
+
 
 def write_data_to_file(data, file_name, join=False):
     """
@@ -13,3 +16,26 @@ def write_data_to_file(data, file_name, join=False):
                 fp.write(" ".join(line) + "\n")
             else:
                 fp.write(line + "\n")
+
+
+def read_data(data_file, label_file):
+    """
+
+    :param data_file: File containing the data
+    :param label_file: File to store labels of processed sentences
+    :return: list of sentences, where each sentence is a list of words
+    """
+
+    sentences = []
+    labels = []
+
+    with open(data_file, "r") as data_fp:
+        for line in data_fp:
+            sentence = line.strip().split()
+            sentences.append(sentence)
+
+    with open(label_file, "r") as label_fp:
+        for line in label_fp:
+            labels.append(int(line.strip().split()[0]))
+
+    return sentences, labels
