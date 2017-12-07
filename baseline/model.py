@@ -52,7 +52,8 @@ class Baseline:
         h0 = self.encoder.initHidden()
         xes = self.embeds(x)
         output, hn = self.encoder.forward(xes, h0)
-        scores = self.mlp.forward(output)
+        mlp_in = output.contiguous().view(self.batch_size, -1)
+        scores = self.mlp.forward(mlp_in)
         _, preds = scores.max(1)
         return preds
 
