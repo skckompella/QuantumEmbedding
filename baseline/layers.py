@@ -1,7 +1,6 @@
 import torch
 from torch.autograd import Variable
 import torch.nn as nn
-import torch.nn.functional as F
 
 
 class RNNEncoder(nn.Module):
@@ -37,7 +36,6 @@ class FeatureExtractor(nn.Module):
         self.layer2 = nn.Linear(128, 64)
         self.layer3 = nn.Linear(64, output_size)
         self.softmax = nn.LogSoftmax()
-
 
     def forward(self, x):
         out1 = self.layer1(x)
