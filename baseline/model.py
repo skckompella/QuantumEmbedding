@@ -18,7 +18,7 @@ class Baseline:
         self.NULL_IDX = 0
 
         self.embeds = nn.Embedding(len(self.dict), self.embedding_size, padding_idx=self.NULL_IDX)
-        self.encoder = layers.RNNEncoder(self.embedding_size, self.encoder_hsz, self.batch_size, self.num_rnn_layers, self.rnn_dropout)
+        self.encoder = layers.RNNEncoder(self.embedding_size, self.encoder_hsz, self.num_rnn_layers, self.rnn_dropout)
         self.mlp = layers.FeatureExtractor(self.encoder_hsz*self.seq_max_len, 2)
 
         self.optims = {
