@@ -39,3 +39,14 @@ def read_data(data_file, label_file):
             labels.append(int(line.strip().split()[0]))
 
     return sentences, labels
+
+
+def get_accuracy(predictions, labels):
+    """
+    Returns the accuracy of the predictions, provided the labels
+    :param predictions: predictions from the model
+    :param labels: gold labels for the respective predictions
+    :return:
+    """
+
+    return float(sum(predictions == labels).data[0]) / labels.size()[0]
