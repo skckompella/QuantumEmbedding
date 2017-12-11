@@ -1,0 +1,13 @@
+
+MAX_LEN = 12
+NUM_EPOCHS = 50
+TRAIN_RATIO = 0.9
+BATCH_RATIO = 0.1
+
+PROCESSED_DATA_DIR = "../data/processed"
+
+TRAIN_DATA_PATH = PROCESSED_DATA_DIR + "/train_data.npy"
+TEST_DATA_PATH = PROCESSED_DATA_DIR + "/test_data.npy"
+TRAIN_LABELS_PATH = PROCESSED_DATA_DIR + "/train_labels.npy"
+TEST_LABELS_PATH = PROCESSED_DATA_DIR + "/test_labels.npy"
+WORD_TO_IDX_PATH = PROCESSED_DATA_DIR + "/word_to_idx"
