@@ -33,7 +33,7 @@ class SentimentNet(nn.Module):
         print b.data
 
     def forward(self, x):
-        x = self.qw(x)
+        x = self.qw.forward(x)
         x = torch.transpose(x, 0, 1)
         x = x - torch.mean(x, dim=0)
         x = torch.transpose(x, 0, 1)
@@ -51,7 +51,8 @@ def doExperiment(experiment, qw_network, logging=False, epochs=32, batch_size=16
                  shuffleEx=True, shuffleNodes=True):
     print "\nStarting Experiment with Parameters:", [experiment, qw_network, walk_length, learn_amps, learn_coin]
 
-    data = Dataset()
+    data = None
+    net = None
 
     # Load Data and set experiment specific parameters
     if experiment == "sentiment":
