@@ -134,6 +134,7 @@ class SentimentDataset(Dataset):
         self.max_len = max_len
         self.train_test_ratio = train_test_ratio
         self.adj = utils.get_sentiment_adjacency_matrix(self.max_len)
+        self.adj_list = constructions.adj2list(self.adj, torch.from_numpy)
 
     def __len__(self):
         return int(len(self.data_x) * self.train_test_ratio)
