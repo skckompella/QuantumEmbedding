@@ -6,6 +6,9 @@ BATCH_RATIO = 0.1
 
 PROCESSED_DATA_DIR = "../data/processed"
 
+DATA_PATH = PROCESSED_DATA_DIR + "/data.npy"
+LABELS_PATH = PROCESSED_DATA_DIR + "/labels.npy"
+
 TRAIN_DATA_PATH = PROCESSED_DATA_DIR + "/train_data.npy"
 TEST_DATA_PATH = PROCESSED_DATA_DIR + "/test_data.npy"
 TRAIN_LABELS_PATH = PROCESSED_DATA_DIR + "/train_labels.npy"
