@@ -114,64 +114,33 @@ def get_data_less_than_length(num_len, sentences_file, labels_file, subset_sente
     return count
 
 
-def get_train_test_split(data, labels, word_to_idx, train_test_ratio, max_len):
-    """
-    Return data and labels split into train and test sets
-    :param data: input sentence data
-    :param labels: gold labels corresponding to inputs
-    :param word_to_idx: dictionary mapping word to its index in the vocabulary
-    :param train_test_ratio: ratio of division into train and test files
-    :param max_len: maximum length of the sentence (number of words) in input data
-    :return:
-    """
-
-    train_len = int(len(data) * train_test_ratio)
-
-    train_data = np.zeros(shape=(train_len, max_len), dtype=int)
-    test_data = np.zeros(shape=(len(data) - train_len, max_len), dtype=int)
-    train_labels = np.zeros(shape=(train_len), dtype=int)
-    test_labels = np.zeros(shape=(len(data) - train_len), dtype=int)
-
-    for i in range(len(data)):
-        if i < train_len:
-            train_labels[i] = labels[i]
-        else:
-            test_labels[i - train_len] = labels[i]
-        offset = max_len - len(data[i])
-        for j in range(len(data[i])):
-            if i < train_len:
-                train_data[i][offset+j] = word_to_idx[data[i][j]]
-            else:
-                test_data[i - train_len][offset+j] = word_to_idx[data[i][j]]
-
-    return train_data, train_labels, test_data, test_labels
-
-
-def prepare_datasets(input_data_files , max_len, train_test_ratio=0.8):
+def prepare_datasets(input_data_files, max_len):
     """
     Reads the input data, and prepares the train, and test files
     :param input_data_files: tuple containing (<path_to_data_file>, <path_to_labels_file>)
     :param max_len: maximum length of the sentence (number of words) in input data
-    :param train_test_ratio: ratio of division into train and test files
     :return:
     """
 
-    sentences, labels = utils.read_data(input_data_files[0], input_data_files[1])
+    sentences, sentence_labels = utils.read_data(input_data_files[0], input_data_files[1])
     vocab = get_vocabulary(sentences)
     word_to_idx = dict()
     word_to_idx["__PAD__"] = 0
 
+    data = np.zeros(shape=(len(sentences), max_len), dtype=long)
+    labels = np.zeros(shape=len(sentences), dtype=long)
+
     for idx, w in enumerate(vocab):
         word_to_idx[w] = idx + 1
 
-    train_data, train_labels, test_data, test_labels = get_train_test_split(sentences, labels, word_to_idx,
-                                                                            train_test_ratio,
-                                                                            max_len)
+    for i in range(len(sentences)):
+        labels[i] = sentence_labels[i]
+        offset = max_len - len(sentences[i])
+        for j in range(len(sentences[i])):
+            data[i][offset+j] = word_to_idx[sentences[i][j]]
 
-    np.save(constants.TRAIN_DATA_PATH, train_data)
-    np.save(constants.TRAIN_LABELS_PATH, train_labels)
-    np.save(constants.TEST_DATA_PATH, test_data)
-    np.save(constants.TEST_LABELS_PATH, test_labels)
+    np.save(constants.DATA_PATH, data)
+    np.save(constants.LABELS_PATH, labels)
 
     with open(constants.WORD_TO_IDX_PATH, "wb") as w_idx_fp:
         pickle.dump(word_to_idx, w_idx_fp)
