@@ -7,7 +7,7 @@ import cPickle as pickle
 
 
 def run_baseline():
-    sentiment_data = datasets.SentimentDataset(constants.DATA_PATH, constants.LABELS_PATH, constants.MAX_LEN)
+    sentiment_data = datasets.SentimentDataset(constants.SENTIMENT_DATA_PATH, constants.SENTIMENT_LABELS_PATH, constants.MAX_LEN)
 
     train_dataset = sentiment_data.get_train_set()
     test_dataset = sentiment_data.get_test_set()

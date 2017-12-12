@@ -139,8 +139,8 @@ def prepare_datasets(input_data_files, max_len):
         for j in range(len(sentences[i])):
             data[i][offset+j] = word_to_idx[sentences[i][j]]
 
-    np.save(constants.DATA_PATH, data)
-    np.save(constants.LABELS_PATH, labels)
+    np.save(constants.SENTIMENT_DATA_PATH, data)
+    np.save(constants.SENTIMENT_LABELS_PATH, labels)
 
     with open(constants.WORD_TO_IDX_PATH, "wb") as w_idx_fp:
         pickle.dump(word_to_idx, w_idx_fp)
@@ -153,8 +153,8 @@ def prepare_datasets(input_data_files, max_len):
 def main():
 
     input_data_files = ("../data/text_corpora/len12_sents.txt", "../data/text_corpora/len12_sentlabels.txt")
-    max_length, train_test_ratio = 12, 0.9
-    prepare_datasets(input_data_files, max_length, train_test_ratio)
+    max_length = constants.MAX_LEN
+    prepare_datasets(input_data_files, max_length)
 
     pass
 
