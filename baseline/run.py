@@ -1,18 +1,19 @@
 import numpy as np
 import torch
 from torch.autograd import Variable
-
-from common import utils, constants
-from model import Baseline
+from common import utils, constants, datasets
+from network import Baseline
 import cPickle as pickle
 
 
 def run_baseline():
+    sentiment_data = datasets.SentimentDataset(constants.DATA_PATH, constants.LABELS_PATH, constants.MAX_LEN)
 
-    train_data = Variable(torch.from_numpy(np.load(constants.TRAIN_DATA_PATH)))
-    test_data = Variable(torch.from_numpy(np.load(constants.TEST_DATA_PATH)))
-    train_labels = Variable(torch.from_numpy(np.load(constants.TRAIN_LABELS_PATH)))
-    test_labels = Variable(torch.from_numpy(np.load(constants.TEST_LABELS_PATH)))
+    train_dataset = sentiment_data.get_train_set()
+    test_dataset = sentiment_data.get_test_set()
+    train_data, train_labels = Variable(torch.from_numpy(train_dataset[0])), Variable(
+        torch.from_numpy(train_dataset[1]))
+    test_data, test_labels = Variable(torch.from_numpy(test_dataset[0])), Variable(torch.from_numpy(test_dataset[1]))
 
     with open(constants.WORD_TO_IDX_PATH, "rb") as w_idx_fp:
         word_to_idx = pickle.load(w_idx_fp)
