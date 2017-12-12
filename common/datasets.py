@@ -1,7 +1,9 @@
 import numpy as np
 import torch
 from torch.utils.data import Dataset
-from constructions import adj2list
+from model import constructions
+from common import utils
+
 
 class numpyDataset(Dataset):
     def __init__(self,datafile='ustemp/2009.npy',adjfile='ustemp/adj.npy',
@@ -32,10 +34,10 @@ class numpyDataset(Dataset):
         if self.asTensor:
             self.dataX=torch.from_numpy(self.dataX)
             self.dataY=torch.from_numpy(self.dataY)
-            self.adj_list=adj2list(self.adj,torch.from_numpy)
+            self.adj_list=constructions.adj2list(self.adj,torch.from_numpy)
             self.adj=torch.from_numpy(self.adj)
         else:
-            self.adj_list=adj2list(self.adj)
+            self.adj_list=constructions.adj2list(self.adj)
 
         self.offset=offset
         self.trainRatio=trainRatio
@@ -60,6 +62,7 @@ class numpyDataset(Dataset):
         #Returns the entire train set
         return (self.dataX[:self.__len__()],
                 self.dataY[:self.__len__()])
+
 
 class coraDataset(Dataset):
     def __init__(self,path="data/cora/",dataset="cora",
@@ -97,7 +100,7 @@ class coraDataset(Dataset):
             self.dataX=self.dataX[perm]
             self.dataY=self.dataY[perm]
 
-        self.adj_list=adj2list(self.adj,torch.from_numpy)
+        self.adj_list=constructions.adj2list(self.adj,torch.from_numpy)
 
         if length is None:
             self.length=len(self.dataX)
@@ -120,3 +123,26 @@ class coraDataset(Dataset):
 
     def testSet(self):
         out=(torch.from_numpy(self.dataX), torch.from_numpy(self.dataY))
+
+
+class SentimentDataset(Dataset):
+
+    def __init__(self, data_path, labels_path, max_len, train_test_ratio=0.8):
+
+        self.data_x = np.load(data_path)
+        self.data_y = np.load(labels_path)
+        self.max_len = max_len
+        self.train_test_ratio = train_test_ratio
+        self.adj = utils.get_sentiment_adjacency_matrix(self.max_len)
+
+    def __len__(self):
+        return int(len(self.data_x) * self.train_test_ratio)
+
+    def __getitem__(self, idx):
+        return torch.from_numpy(self.data_x[idx]), torch.from_numpy(self.data_y[idx])
+
+    def get_train_set(self):
+        return self.data_x[:self.__len__()], self.data_y[:self.__len__()]
+
+    def get_test_set(self):
+        return self.data_x[self.__len__():], self.data_y[self.__len__():]
