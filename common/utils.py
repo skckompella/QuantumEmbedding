@@ -1,5 +1,4 @@
-from nltk import word_tokenize
-import re
+import numpy as np
 
 
 def write_data_to_file(data, file_name, join=False):
@@ -50,3 +49,20 @@ def get_accuracy(predictions, labels):
     """
 
     return float(sum(predictions == labels).data[0]) / labels.size()[0]
+
+
+def get_sentiment_adjacency_matrix(max_len):
+
+    adj = np.zeros(shape=(max_len, max_len))
+
+    for i in range(max_len):
+        prev_idx = max(0, i-1)
+        next_idx = min(max_len-1, i+1)
+        adj[i, prev_idx] = 1
+        adj[i, next_idx] = 1
+
+    return adj
+
+
+if __name__ == '__main__':
+    print get_sentiment_adjacency_matrix(12)
