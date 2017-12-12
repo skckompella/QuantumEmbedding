@@ -1,9 +1,12 @@
+import cPickle as pickle
+
 import numpy as np
 import torch
 from torch.autograd import Variable
-from common import utils, constants, datasets
+
+from common import utils, constants
+import datasets
 from network import Baseline
-import cPickle as pickle
 
 
 def run_baseline():

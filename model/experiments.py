@@ -3,9 +3,9 @@ from datetime import datetime
 import torch.optim as optim
 from torch.utils.data import DataLoader
 
-from common.datasets import *
-from layers import *
 from common import constants
+from layers import *
+from model.datasets import *
 
 
 class SentimentNet(nn.Module):
