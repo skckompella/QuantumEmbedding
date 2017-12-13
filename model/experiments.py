@@ -9,9 +9,13 @@ from model.datasets import *
 
 
 class SentimentNet(nn.Module):
-    def __init__(self, adj, qw_network="qw1c", num_walkers=None, learn_coin=True, learn_amps=False, onGPU=False,
+    def __init__(self, dict, embedding_size,
+                 adj, qw_network="qw1c", num_walkers=None, learn_coin=True, learn_amps=False, onGPU=False,
                  time_steps=1):
         super(SentimentNet, self).__init__()
+        self.dict = dict
+        self.embedding = nn.Embedding(len(self.dict), embedding_size, padding_idx=self.NULL_IDX)
+
         self.qw = qwLayer(adj, num_walkers=num_walkers,
                           learn_coin=learn_coin, learn_amps=learn_amps,
                           onGPU=onGPU, time_steps=time_steps)
@@ -20,32 +24,18 @@ class SentimentNet(nn.Module):
                                 num_walkers=num_walkers, time_steps=time_steps,
                                 learn_amps=learn_amps, learn_coin=learn_coin,
                                 onGPU=onGPU)
-        w = torch.DoubleTensor(1432, 7)
-        w = nn.init.xavier_normal(w)
-        w = w - torch.mean(w, dim=0)
-        b = np.zeros(7)
-        if onGPU:
-            self.w = nn.Parameter(w.cuda())
-            self.b = nn.Parameter(torch.DoubleTensor(b).cuda())
-        else:
-            self.w = nn.Parameter(w)
-            self.b = nn.Parameter(torch.DoubleTensor(b))
-        print b.data
+
+        self.mlp = FeatureExtractor(embedding_size, 2) #TODO- Figure out how to give input_size
 
     def forward(self, x):
+        x = self.embedding(x)
         x = self.qw.forward(x)
-        x = torch.transpose(x, 0, 1)
-        x = x - torch.mean(x, dim=0)
-        x = torch.transpose(x, 0, 1)
-        x = torch.matmul(x, self.w) + self.b
+        x = self.mlp.forward(x)
         return x
 
-    def toGPU(self):
-        self.qw.toGPU()
-        self.cuda()
 
 
-def doExperiment(experiment, qw_network, logging=False, epochs=32, batch_size=16,
+def doExperiment(dict, experiment, qw_network, embedding_size=128, logging=False, epochs=32, batch_size=16,
                  ongpu=True, learn_amps=True, learn_coin=True, walk_length=4,
                  train_ratio=0.5, feature_dropout=0.0, walkers=None,
                  shuffleEx=True, shuffleNodes=True):
@@ -58,7 +48,7 @@ def doExperiment(experiment, qw_network, logging=False, epochs=32, batch_size=16
     if experiment == "sentiment":
         data = SentimentDataset(constants.SENTIMENT_DATA_PATH, constants.SENTIMENT_LABELS_PATH, constants.MAX_LEN,
                                 constants.TRAIN_RATIO)
-        net = SentimentNet(data.adj_list, qw_network, constants.MAX_LEN, learn_coin, learn_amps, ongpu, walk_length)
+        net = SentimentNet(dict, embedding_size, data.adj_list, qw_network, constants.MAX_LEN, learn_coin, learn_amps, ongpu, walk_length)
         criterion = nn.NLLLoss()
 
     opt = optim.Adam(net.parameters())
