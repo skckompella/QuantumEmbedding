@@ -15,6 +15,7 @@ class SentimentNet(nn.Module):
                  time_steps=1):
         super(SentimentNet, self).__init__()
         self.word_to_idx = word_to_idx
+        print "length", len(self.word_to_idx)
         self.NULL_IDX = 0
         self.embedding = nn.Embedding(len(self.word_to_idx), embedding_size, padding_idx=self.NULL_IDX)
 
@@ -31,7 +32,9 @@ class SentimentNet(nn.Module):
 
     def forward(self, x):
         x = self.embedding(x)
+        x = x.double()
         x = self.qw.forward(x)
+        x = x.sum(1).float()
         x = self.mlp.forward(x)
         return x
 
@@ -97,8 +100,11 @@ def doExperiment(experiment, qw_network, embedding_size=128, logging=False, epoc
                 # f.write(str(ac)+"\n")
 
         x, y = data.get_test_set()
-        x = Variable(x.cuda())
-        y = Variable(y.cuda())
+        if ongpu:
+            x, y = Variable(x.cuda(), requires_grad=False), Variable(y.cuda(), requires_grad=False)
+        else:
+            x, y = Variable(x, requires_grad=False), Variable(y, requires_grad=False)
+
         out = net.forward(x)
 
         testloss = criterion(out, y).data.cpu().numpy()[0]
