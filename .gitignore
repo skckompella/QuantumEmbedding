@@ -6,3 +6,7 @@
 *.log
 
 Quantum Walk Graph Neural Networks.odp
+
+*.log
+
+*.iml
