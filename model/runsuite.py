@@ -6,21 +6,22 @@ params={
     'logging':True,
     'epochs':128,
     'batch_size':16,
-    'ongpu':True,
+    'ongpu':False,
     'train_ratio':0.5,
     'feature_dropout' : 0.0,
     'walkers':None,
     'shuffleEx':True,
     'shuffleNodes':True,
-    'experiment':'weather'}
+    'experiment':'sentiment'}
 
 results=np.zeros((5,1,4,1,1))
 losses=[]
 for trial in range(5):
-    i=0
-    for network in ['qw1c']:#,'dc']:
-        params['network']=network
+    # i=0
+    # for network in ['qw1c']:#,'dc']:
+    #     params['network']=network
         j=0
+        params['qw_network']='qw1c'
         for walk_length in [1,2,3,4]:
             params['walk_length']=walk_length
             k=0
@@ -34,11 +35,11 @@ for trial in range(5):
                     results[trial,i,j,k,l],los=doExperiment(**params)
                     losses.append(los)
                     np.save('results1c',results)
-                    if network!='qw':
-                        break
+                    # if network!='qw':
+                    #     break
                     l+=1
-                if network!='qw':
-                    break
+                # if network!='qw':
+                #     break
                 k+=1
             j+=1
-        i+=1
+        # i+=1

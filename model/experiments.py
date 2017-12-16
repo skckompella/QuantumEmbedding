@@ -6,15 +6,17 @@ from torch.utils.data import DataLoader
 from common import constants
 from layers import *
 from model.datasets import *
+import pickle
 
 
 class SentimentNet(nn.Module):
-    def __init__(self, dict, embedding_size,
+    def __init__(self, word_to_idx, embedding_size,
                  adj, qw_network="qw1c", num_walkers=None, learn_coin=True, learn_amps=False, onGPU=False,
                  time_steps=1):
         super(SentimentNet, self).__init__()
-        self.dict = dict
-        self.embedding = nn.Embedding(len(self.dict), embedding_size, padding_idx=self.NULL_IDX)
+        self.word_to_idx = word_to_idx
+        self.NULL_IDX=0
+        self.embedding = nn.Embedding(len(self.word_to_idx), embedding_size, padding_idx=self.NULL_IDX)
 
         self.qw = qwLayer(adj, num_walkers=num_walkers,
                           learn_coin=learn_coin, learn_amps=learn_amps,
@@ -25,7 +27,7 @@ class SentimentNet(nn.Module):
                                 learn_amps=learn_amps, learn_coin=learn_coin,
                                 onGPU=onGPU)
 
-        self.mlp = FeatureExtractor(embedding_size, 2) #TODO- Figure out how to give input_size
+        self.mlp = FeatureExtractor(embedding_size, 2)
 
     def forward(self, x):
         x = self.embedding(x)
@@ -35,7 +37,7 @@ class SentimentNet(nn.Module):
 
 
 
-def doExperiment(dict, experiment, qw_network, embedding_size=128, logging=False, epochs=32, batch_size=16,
+def doExperiment(experiment, qw_network, embedding_size=128, logging=False, epochs=32, batch_size=16,
                  ongpu=True, learn_amps=True, learn_coin=True, walk_length=4,
                  train_ratio=0.5, feature_dropout=0.0, walkers=None,
                  shuffleEx=True, shuffleNodes=True):
@@ -44,11 +46,14 @@ def doExperiment(dict, experiment, qw_network, embedding_size=128, logging=False
     data = None
     net = None
 
+    with open(constants.WORD_TO_IDX_PATH, "rb") as w_idx_fp:
+        word_to_idx = pickle.load(w_idx_fp)
+
     # Load Data and set experiment specific parameters
     if experiment == "sentiment":
         data = SentimentDataset(constants.SENTIMENT_DATA_PATH, constants.SENTIMENT_LABELS_PATH, constants.MAX_LEN,
                                 constants.TRAIN_RATIO)
-        net = SentimentNet(dict, embedding_size, data.adj_list, qw_network, constants.MAX_LEN, learn_coin, learn_amps, ongpu, walk_length)
+        net = SentimentNet(word_to_idx, embedding_size, data.adj_list, qw_network, constants.MAX_LEN, learn_coin, learn_amps, ongpu, walk_length)
         criterion = nn.NLLLoss()
 
     opt = optim.Adam(net.parameters())
