@@ -179,6 +179,7 @@ class qwLayer1C(nn.Module):
             #Swap Operator
             amps=a[self.swap[0],self.swap[1]].view(self.init_amps.size())
         d1=torch.sum(amps*amps,dim=1)
+        # print self.init_ampt_amps.shape
         d2=torch.sum(self.init_amps*self.init_amps,dim=1)
         self.D=torch.matmul(d2,torch.transpose(d1,0,1))
         return torch.matmul(torch.transpose(self.D,0,1),x)

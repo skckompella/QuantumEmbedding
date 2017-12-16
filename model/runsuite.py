@@ -17,9 +17,9 @@ params={
 results=np.zeros((5,1,4,1,1))
 losses=[]
 for trial in range(5):
-    # i=0
-    # for network in ['qw1c']:#,'dc']:
-    #     params['network']=network
+    i=0
+    for network in ['qw1c']:#,'dc']:
+        params['qw_network']=network
         j=0
         params['qw_network']='qw1c'
         for walk_length in [1,2,3,4]:
@@ -42,4 +42,4 @@ for trial in range(5):
                 #     break
                 k+=1
             j+=1
-        # i+=1
+        i+=1

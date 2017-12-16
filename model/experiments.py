@@ -34,6 +34,7 @@ class SentimentNet(nn.Module):
         x = self.embedding(x)
         x = x.double()
         x = self.qw.forward(x)
+        # print x
         x = x.sum(1).float()
         x = self.mlp.forward(x)
         return x
@@ -109,6 +110,8 @@ def doExperiment(experiment, qw_network, embedding_size=128, logging=False, epoc
 
         testloss = criterion(out, y).data.cpu().numpy()[0]
         los.append(testloss)
+        _, preds = out.max(1)
+        print "Test Accuracy: %f" % utils.get_accuracy(preds, y)
         print "Test Loss: ", testloss
         print "Test Loss per Node:", testloss / len(data.adj)
         if logging:
