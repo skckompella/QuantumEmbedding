@@ -10,13 +10,15 @@ from network import Baseline
 
 
 def run_baseline():
-    sentiment_data = datasets.SentimentDataset(constants.SENTIMENT_DATA_PATH, constants.SENTIMENT_LABELS_PATH, constants.MAX_LEN)
+    sentiment_data = datasets.SentimentDataset(constants.SENTIMENT_DATA_PATH, constants.SENTIMENT_LABELS_PATH,
+                                               constants.MAX_LEN)
 
     train_dataset = sentiment_data.get_train_set()
     test_dataset = sentiment_data.get_test_set()
     train_data, train_labels = Variable(torch.from_numpy(train_dataset[0])), Variable(
-        torch.from_numpy(train_dataset[1]))
-    test_data, test_labels = Variable(torch.from_numpy(test_dataset[0])), Variable(torch.from_numpy(test_dataset[1]))
+        torch.from_numpy(train_dataset[1].flatten()))
+    test_data, test_labels = Variable(torch.from_numpy(test_dataset[0])), Variable(
+        torch.from_numpy(test_dataset[1].flatten()))
 
     with open(constants.WORD_TO_IDX_PATH, "rb") as w_idx_fp:
         word_to_idx = pickle.load(w_idx_fp)
