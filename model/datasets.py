@@ -140,7 +140,7 @@ class SentimentDataset(Dataset):
         return int(len(self.data_x) * self.train_test_ratio)
 
     def __getitem__(self, idx):
-        return torch.from_numpy(self.data_x[idx]), torch.from_numpy(self.data_y[idx])
+        return torch.from_numpy(np.array(self.data_x[idx])), torch.from_numpy(np.array(self.data_y[idx]))
 
     def get_train_set(self):
         return self.data_x[:self.__len__()], self.data_y[:self.__len__()]

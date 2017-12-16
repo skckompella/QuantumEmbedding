@@ -128,13 +128,13 @@ def prepare_datasets(input_data_files, max_len):
     word_to_idx["__PAD__"] = 0
 
     data = np.zeros(shape=(len(sentences), max_len), dtype=long)
-    labels = np.zeros(shape=len(sentences), dtype=long)
+    labels = np.zeros(shape=(len(sentences), 1), dtype=long)
 
     for idx, w in enumerate(vocab):
         word_to_idx[w] = idx + 1
 
     for i in range(len(sentences)):
-        labels[i] = sentence_labels[i]
+        labels[i][0] = sentence_labels[i]
         offset = max_len - len(sentences[i])
         for j in range(len(sentences[i])):
             data[i][offset+j] = word_to_idx[sentences[i][j]]

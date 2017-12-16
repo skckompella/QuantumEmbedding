@@ -15,7 +15,7 @@ class SentimentNet(nn.Module):
                  time_steps=1):
         super(SentimentNet, self).__init__()
         self.word_to_idx = word_to_idx
-        self.NULL_IDX=0
+        self.NULL_IDX = 0
         self.embedding = nn.Embedding(len(self.word_to_idx), embedding_size, padding_idx=self.NULL_IDX)
 
         self.qw = qwLayer(adj, num_walkers=num_walkers,
@@ -34,7 +34,6 @@ class SentimentNet(nn.Module):
         x = self.qw.forward(x)
         x = self.mlp.forward(x)
         return x
-
 
 
 def doExperiment(experiment, qw_network, embedding_size=128, logging=False, epochs=32, batch_size=16,
