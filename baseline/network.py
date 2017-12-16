@@ -1,4 +1,5 @@
 from __future__ import division
+from common import constants
 import torch.nn as nn
 import torch.optim as optim
 import layers
@@ -18,6 +19,7 @@ class Baseline:
         self.NULL_IDX = 0
 
         self.embeds = nn.Embedding(len(self.dict), self.embedding_size, padding_idx=self.NULL_IDX)
+        # self.embeds = nn.Linear(constants.MAX_LEN, self.embedding_size)
         self.encoder = layers.RNNEncoder(self.embedding_size, self.encoder_hsz, self.num_rnn_layers, self.rnn_dropout)
         self.mlp = layers.FeatureExtractor(self.encoder_hsz*self.seq_max_len, 2)
 
