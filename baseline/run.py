@@ -3,6 +3,7 @@ import cPickle as pickle
 import numpy as np
 import torch
 from torch.autograd import Variable
+from torch.utils.data import DataLoader
 
 from common import utils, constants
 import datasets
@@ -12,31 +13,46 @@ from network import Baseline
 def run_baseline():
     sentiment_data = datasets.SentimentDataset(constants.SENTIMENT_DATA_PATH, constants.SENTIMENT_LABELS_PATH,
                                                constants.MAX_LEN)
+    sentiment_loader = DataLoader(sentiment_data, batch_size=constants.BATCH_SIZE, shuffle=True, num_workers=1)
 
-    train_dataset = sentiment_data.get_train_set()
-    test_dataset = sentiment_data.get_test_set()
-    train_data, train_labels = Variable(torch.from_numpy(train_dataset[0])), Variable(
-        torch.from_numpy(train_dataset[1].flatten()))
-    test_data, test_labels = Variable(torch.from_numpy(test_dataset[0])), Variable(
-        torch.from_numpy(test_dataset[1].flatten()))
+    test_data, test_labels = sentiment_data.get_test_set()
+    if constants.GPU:
+        test_data, test_labels = Variable(test_data.cuda(), requires_grad=False), Variable(test_labels.cuda(),
+                                                                                           requires_grad=False)
+    else:
+        test_data, test_labels = Variable(test_data, requires_grad=False), Variable(test_labels, requires_grad=False)
 
     with open(constants.WORD_TO_IDX_PATH, "rb") as w_idx_fp:
         word_to_idx = pickle.load(w_idx_fp)
 
-    batch_size = int((train_data.size()[0] + test_data.size()[0]) * constants.BATCH_RATIO)
-
-    model = Baseline(word_to_idx, batch_size, constants.MAX_LEN)
+    model = Baseline(word_to_idx, constants.MAX_LEN)
     for epoch in range(constants.NUM_EPOCHS):
-        np.random.seed()
-        batch_indices = torch.from_numpy(np.random.randint(0, train_data.size()[0], batch_size))
+        running_loss = 0.0
+        running_acc = 0.0
+        for batch, (x, y) in enumerate(sentiment_loader):
+            if constants.GPU:
+                x, y = Variable(x.cuda(), requires_grad=False), Variable(y.cuda(), requires_grad=False)
+            else:
+                x, y = Variable(x, requires_grad=False), Variable(y, requires_grad=False)
 
-        print "-----------------------"
-        train_loss, train_predictions = model.train(train_data[batch_indices], train_labels[batch_indices])
-        print "Epoch: %d, Training Loss: %f, Training Accuracy: %f" % (epoch, train_loss.data[0], utils.get_accuracy(
-            train_predictions, train_labels[batch_indices]))
+            train_loss, train_predictions = model.train(x, y)
 
-    test_predictions = model.test(test_data)
-    print "Test Accuracy: %f" % utils.get_accuracy(test_predictions, test_labels)
+            if batch % 10 == 0:
+                print "------------------------------------"
+                print "Epoch: %5d Batch: %5d Loss: %.3f Accuracy: %.3f" % (
+                    epoch + 1, int(batch) + 1, running_loss / 10, running_acc / 10)
+                running_loss = 0.0
+                running_acc = 0.0
+
+            running_loss += train_loss.data[0]
+            running_acc += utils.get_accuracy(train_predictions, y)
+
+        # print "------------------------------------"
+        # print "Epoch: %d Loss: %.3f Accuracy: %.3f" % (
+        # epoch + 1, running_loss / len(sentiment_loader), running_acc / len(sentiment_loader))
+
+        test_predictions = model.test(test_data)
+        print "Test Accuracy: %f" % utils.get_accuracy(test_predictions, test_labels)
 
     pass
 
