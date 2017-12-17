@@ -71,14 +71,12 @@ def remove_oov_words(sentences, embeddings_file):
     return sentences
 
 
-def get_data_less_than_length(num_len, sentences_file, labels_file, subset_sentences_file, subset_label_file):
+def get_data_less_than_length(num_len, input_files, output_files):
     """
 
     :param num_len: desired max length
-    :param sentences_file: input file containing the sentences
-    :param labels_file: input file containing the labels
-    :param subset_sentences_file: file where the sentences with length less than num_len will be stored
-    :param subset_label_file: file where labels of above sentences will be stored
+    :param input_files: input files containing the sentences and labels respectively
+    :param output_files: file where the sentences and labels respectively with length less than num_len will be stored
     :return:
     """
 
@@ -87,12 +85,12 @@ def get_data_less_than_length(num_len, sentences_file, labels_file, subset_sente
     subset_sentences = []
     subset_labels = []
 
-    with open(labels_file, "r") as lb_fp:
+    with open(input_files[1], "r") as lb_fp:
         for line in lb_fp:
             labels.append(line.strip().split(" ")[0])
 
     counter = 0
-    with open(sentences_file, "r") as fp:
+    with open(input_files[0], "r") as fp:
         for line in fp:
             sentence = line.strip().split()
             if len(sentence) <= num_len:
@@ -103,11 +101,11 @@ def get_data_less_than_length(num_len, sentences_file, labels_file, subset_sente
 
     assert count == len(subset_sentences) == len(subset_labels)
 
-    with open(subset_sentences_file, "w") as s_fp:
+    with open(output_files[0], "w") as s_fp:
         for sentence in subset_sentences:
             s_fp.write(" ".join(sentence) + "\n")
 
-    with open(subset_label_file, "w") as l_fp:
+    with open(output_files[1], "w") as l_fp:
         for label in subset_labels:
             l_fp.write(label + "\n")
 
@@ -137,7 +135,7 @@ def prepare_datasets(input_data_files, max_len):
         labels[i] = sentence_labels[i]
         offset = max_len - len(sentences[i])
         for j in range(len(sentences[i])):
-            data[i][offset+j] = word_to_idx[sentences[i][j]]
+            data[i][offset + j] = word_to_idx[sentences[i][j]]
 
     np.save(constants.SENTIMENT_DATA_PATH, data)
     np.save(constants.SENTIMENT_LABELS_PATH, labels)
@@ -151,10 +149,8 @@ def prepare_datasets(input_data_files, max_len):
 
 
 def main():
-
-    input_data_files = ("../data/text_corpora/len12_sents.txt", "../data/text_corpora/len12_sentlabels.txt")
-    max_length = constants.MAX_LEN
-    prepare_datasets(input_data_files, max_length)
+    get_data_less_than_length(constants.MAX_LEN, constants.INPUT_DATA_FILES, constants.PROCESSED_DATA_FILES)
+    prepare_datasets(constants.PROCESSED_DATA_FILES, constants.MAX_LEN)
 
     pass
 
