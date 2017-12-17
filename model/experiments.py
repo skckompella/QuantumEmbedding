@@ -1,3 +1,4 @@
+from  __future__ import division
 from datetime import datetime
 
 import torch.optim as optim
@@ -34,8 +35,9 @@ class SentimentNet(nn.Module):
         x = self.embedding(x)
         x = x.double()
         x = self.qw.forward(x)
-        # print x
+        # print x[0][3]
         x = x.sum(1).float()
+        # exit()
         x = self.mlp.forward(x)
         return x
 
@@ -48,6 +50,8 @@ def doExperiment(experiment, qw_network, embedding_size=128, logging=False, epoc
 
     data = None
     net = None
+    criterion = None
+    f = None
 
     with open(constants.WORD_TO_IDX_PATH, "rb") as w_idx_fp:
         word_to_idx = pickle.load(w_idx_fp)
@@ -59,11 +63,9 @@ def doExperiment(experiment, qw_network, embedding_size=128, logging=False, epoc
         net = SentimentNet(word_to_idx, embedding_size, data.adj_list, qw_network, constants.MAX_LEN, learn_coin, learn_amps, ongpu, walk_length)
         criterion = nn.NLLLoss()
 
-    opt = optim.Adam(net.parameters())
+    opt = optim.RMSprop(net.parameters(), lr=1e-2)
 
-    running_loss = 0.0
     print "Beginning Traning.."
-    print "Epoch Batch Loss"
     besttest = 1000
     if logging:
         f = open('results/' +
@@ -71,14 +73,17 @@ def doExperiment(experiment, qw_network, embedding_size=128, logging=False, epoc
                     learn_amps) + "-" + str(
                     learn_coin) + "-" + str(walk_length) + "-" + str(walkers) + ".log", "a+")
     dloader = DataLoader(data, batch_size=batch_size, shuffle=True, num_workers=1)
-    patience = 0
     los = []
+
     for iter in range(epochs):
+        running_loss = 0.0
+        running_acc = 0.0
         for i_batch, (x, y) in enumerate(dloader):
             if ongpu:
                 x, y = Variable(x.cuda(), requires_grad=False), Variable(y.cuda(), requires_grad=False)
             else:
                 x, y = Variable(x, requires_grad=False), Variable(y, requires_grad=False)
+
             opt.zero_grad()  # zero the gradient buffers
             output = net.forward(x)
             loss = criterion(output, y)
@@ -86,19 +91,9 @@ def doExperiment(experiment, qw_network, embedding_size=128, logging=False, epoc
             opt.step()
 
             running_loss += loss.data[0]
-            loss_batches = 4
-            if i_batch % loss_batches == loss_batches - 1:  # print every 10 mini-batches
-                print('%5d %5d %.3f' %
-                      (iter + 1, i_batch + 1, running_loss / loss_batches))
-                if logging:
-                    f.write('%5d %5d %.3f\n' %
-                            (iter + 1, i_batch + 1, running_loss / loss_batches))
-                running_loss = 0.0
-                # ac=acc(output[0,:train_size], data.dataY[:train_size])
-                # print "Train Accuracy:",ac
-                # ac=acc(output[0,train_size:], data.dataY[train_size:])
-                # print "Test Accuracy:", ac
-                # f.write(str(ac)+"\n")
+            running_acc += utils.get_accuracy(output.max(1)[1], y)
+        print "------------------------------------"
+        print "Epoch: %d Loss: %.3f Accuracy: %.3f" % (iter + 1, running_loss / len(dloader), running_acc / len(dloader))
 
         x, y = data.get_test_set()
         if ongpu:
@@ -108,21 +103,18 @@ def doExperiment(experiment, qw_network, embedding_size=128, logging=False, epoc
 
         out = net.forward(x)
 
-        testloss = criterion(out, y).data.cpu().numpy()[0]
+        testloss = criterion(out, y).data[0]
         los.append(testloss)
         _, preds = out.max(1)
-        print "Test Accuracy: %f" % utils.get_accuracy(preds, y)
-        print "Test Loss: ", testloss
-        print "Test Loss per Node:", testloss / len(data.adj)
+        print "Test Loss: %.3f, Test Accuracy: %f" % (testloss, utils.get_accuracy(preds, y))
         if logging:
-            f.write("iter: " + str(iter) + " Test Loss: " + str(testloss) + "\n")
+            f.write(" Test Loss: " + str(testloss) + "\n")
         if testloss < besttest:
-            patience = 0
             besttest = testloss
-        if patience == 8:
-            break
+
     if logging:
         f.close()
+
     return besttest, los
 
 
