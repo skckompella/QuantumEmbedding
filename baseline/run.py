@@ -4,6 +4,7 @@ import numpy as np
 import torch
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
+import logging
 
 from common import utils, constants
 import datasets
@@ -11,6 +12,9 @@ from network import Baseline
 
 
 def run_baseline():
+    logging.basicConfig(filename=constants.LOGS_DIR + '/baseline/baseline_rnn.log', level=logging.INFO,
+                        format='%(asctime)s %(message)s')
+
     sentiment_data = datasets.SentimentDataset(constants.SENTIMENT_DATA_PATH, constants.SENTIMENT_LABELS_PATH,
                                                constants.MAX_LEN)
     sentiment_loader = DataLoader(sentiment_data, batch_size=constants.BATCH_SIZE, shuffle=True, num_workers=1)
@@ -38,9 +42,10 @@ def run_baseline():
             train_loss, train_predictions = model.train(x, y)
 
             if batch % 10 == 0:
-                print "------------------------------------"
-                print "Epoch: %5d Batch: %5d Loss: %.3f Accuracy: %.3f" % (
+                message = "Epoch: %5d Batch: %5d Loss: %.3f Accuracy: %.3f" % (
                     epoch + 1, int(batch) + 1, running_loss / 10, running_acc / 10)
+                logging.info(message)
+                print message
                 running_loss = 0.0
                 running_acc = 0.0
 
@@ -52,7 +57,9 @@ def run_baseline():
         # epoch + 1, running_loss / len(sentiment_loader), running_acc / len(sentiment_loader))
 
         test_predictions = model.test(test_data)
-        print "Test Accuracy: %f" % utils.get_accuracy(test_predictions, test_labels)
+        message = "Test Accuracy: %f" % utils.get_accuracy(test_predictions, test_labels)
+        logging.info(message)
+        print message
 
     pass
 

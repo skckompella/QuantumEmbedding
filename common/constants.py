@@ -4,8 +4,10 @@ TRAIN_RATIO = 0.9
 BATCH_SIZE = 16
 GPU = False
 
-PROCESSED_DATA_DIR = "../data/processed"
-TEXT_CORPORA_DIR = "../data/text_corpora"
+ROOT_DIR = "/Users/BatComp/Desktop/UMass/Courses/691 - Quantum/QuantumEmbedding"
+PROCESSED_DATA_DIR = ROOT_DIR + "/data/processed"
+TEXT_CORPORA_DIR = ROOT_DIR + "/data/text_corpora"
+LOGS_DIR = ROOT_DIR + "/logs"
 
 SENTIMENT_DATA_PATH = PROCESSED_DATA_DIR + "/sentiment_data_" + str(MAX_LEN) + ".npy"
 SENTIMENT_LABELS_PATH = PROCESSED_DATA_DIR + "/sentiment_labels_" + str(MAX_LEN) + ".npy"
