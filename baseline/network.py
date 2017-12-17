@@ -6,14 +6,13 @@ import layers
 
 
 class Baseline:
-    def __init__(self, word_to_idx, batch_size, seq_max_len):
+    def __init__(self, word_to_idx, seq_max_len):
         self.use_cuda = False
         self.embedding_size = 300
         self.encoder_hsz = self.embedding_size
         self.num_rnn_layers = 2
         self.learning_rate = 0.01
         self.rnn_dropout = 0.1
-        self.batch_size = batch_size
         self.seq_max_len = seq_max_len
         self.dict = word_to_idx
         self.NULL_IDX = 0
