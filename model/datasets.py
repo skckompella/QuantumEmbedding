@@ -6,67 +6,67 @@ from common import utils
 
 
 class numpyDataset(Dataset):
-    def __init__(self,datafile='ustemp/2009.npy',adjfile='ustemp/adj.npy',
-                 offset=1,trainRatio=1,shuffleEx=False,shuffleNodes=False,
-                 dropout_p=0.0,asTensor=False):
+    def __init__(self, datafile='ustemp/2009.npy', adjfile='ustemp/adj.npy',
+                 offset=1, trainRatio=1, shuffleEx=False, shuffleNodes=False,
+                 dropout_p=0.0, asTensor=False):
 
         data = np.load('ustemp/2009.npy').astype(float)
-        if len(data.shape)==2:
-            data=np.expand_dims(data,-1)
+        if len(data.shape) == 2:
+            data = np.expand_dims(data, -1)
 
-        self.dataX=data[:-offset]
-        self.dataY=data[offset:]
+        self.dataX = data[:-offset]
+        self.dataY = data[offset:]
         self.adj = np.load('ustemp/adj.npy').astype(int)
-        self.dropout_p=dropout_p
+        self.dropout_p = dropout_p
 
         if shuffleEx:
             perm = np.random.permutation(len(self.dataX))
-            self.dataX=self.dataY[perm]
-            self.dataY=self.dataY[perm]
+            self.dataX = self.dataY[perm]
+            self.dataY = self.dataY[perm]
 
         if shuffleNodes:
-            perm=np.random.permutation(len(self.adj))
-            self.dataX=self.dataX[:,perm]
-            self.dataY=self.dataY[:,perm]
-            self.adj=self.adj[perm][:,perm]
+            perm = np.random.permutation(len(self.adj))
+            self.dataX = self.dataX[:, perm]
+            self.dataY = self.dataY[:, perm]
+            self.adj = self.adj[perm][:, perm]
 
-        self.asTensor=asTensor
+        self.asTensor = asTensor
         if self.asTensor:
-            self.dataX=torch.from_numpy(self.dataX)
-            self.dataY=torch.from_numpy(self.dataY)
-            self.adj_list=constructions.adj2list(self.adj,torch.from_numpy)
-            self.adj=torch.from_numpy(self.adj)
+            self.dataX = torch.from_numpy(self.dataX)
+            self.dataY = torch.from_numpy(self.dataY)
+            self.adj_list = constructions.adj2list(self.adj, torch.from_numpy)
+            self.adj = torch.from_numpy(self.adj)
         else:
-            self.adj_list=constructions.adj2list(self.adj)
+            self.adj_list = constructions.adj2list(self.adj)
 
-        self.offset=offset
-        self.trainRatio=trainRatio
+        self.offset = offset
+        self.trainRatio = trainRatio
 
     def __len__(self):
-        #Returns the length of the train set
-        return np.int(len(self.dataX)*self.trainRatio)
+        # Returns the length of the train set
+        return np.int(len(self.dataX) * self.trainRatio)
 
-    def __getitem__(self,idx):
-        #Returns an item from the train set
+    def __getitem__(self, idx):
+        # Returns an item from the train set
         mask = np.random.choice([0, 1], self.dataX[idx].shape, p=[self.dropout_p, 1 - self.dropout_p])
         if self.asTensor:
-            mask=torch.DoubleTensor(mask)
+            mask = torch.DoubleTensor(mask)
         return (self.dataX[idx] * mask, self.dataY[idx])
 
     def testSet(self):
-        #Returns the entire test set
+        # Returns the entire test set
         return (self.dataX[self.__len__():],
                 self.dataY[self.__len__():])
 
     def trainSet(self):
-        #Returns the entire train set
+        # Returns the entire train set
         return (self.dataX[:self.__len__()],
                 self.dataY[:self.__len__()])
 
 
 class coraDataset(Dataset):
-    def __init__(self,path="data/cora/",dataset="cora",
-                 length=None,shuffleNodes=False,dropout_p=0.0):
+    def __init__(self, path="data/cora/", dataset="cora",
+                 length=None, shuffleNodes=False, dropout_p=0.0):
         label2index = {
             'Case_Based': 0,
             'Genetic_Algorithms': 1,
@@ -89,72 +89,69 @@ class coraDataset(Dataset):
 
         adj = np.zeros((self.dataY.shape[0], self.dataY.shape[0]))
         for e in edges:
-            adj[e[0],e[1]]=1
+            adj[e[0], e[1]] = 1
         adj = adj + adj.T
-        adj[adj>0]=1
-        self.adj=adj
+        adj[adj > 0] = 1
+        self.adj = adj
 
         if shuffleNodes:
-            perm=np.random.permute(len(adj))
-            self.adj=self.adj[perm][:,perm]
-            self.dataX=self.dataX[perm]
-            self.dataY=self.dataY[perm]
+            perm = np.random.permute(len(adj))
+            self.adj = self.adj[perm][:, perm]
+            self.dataX = self.dataX[perm]
+            self.dataY = self.dataY[perm]
 
-        self.adj_list=constructions.adj2list(self.adj,torch.from_numpy)
+        self.adj_list = constructions.adj2list(self.adj, torch.from_numpy)
 
         if length is None:
-            self.length=len(self.dataX)
+            self.length = len(self.dataX)
         else:
-            self.length=length
+            self.length = length
 
-        self.dropout_p=dropout_p
+        self.dropout_p = dropout_p
 
     def __len__(self):
         return len(self.dataX)
 
     def __getitem__(self, idx):
-        mask=np.random.choice([0,1], self.dataX.shape, p=[self.dropout_p, 1 - self.dropout_p])
-        out=(torch.from_numpy(self.dataX * mask),
-             torch.from_numpy(self.dataY))
+        mask = np.random.choice([0, 1], self.dataX.shape, p=[self.dropout_p, 1 - self.dropout_p])
+        out = (torch.from_numpy(self.dataX * mask),
+               torch.from_numpy(self.dataY))
         return out
 
     def trainSet(self):
         out = (torch.from_numpy(self.dataX), torch.from_numpy(self.dataY))
 
     def testSet(self):
-        out=(torch.from_numpy(self.dataX), torch.from_numpy(self.dataY))
+        out = (torch.from_numpy(self.dataX), torch.from_numpy(self.dataY))
 
 
 class SentimentDataset(Dataset):
 
     def __init__(self, data_path, labels_path, max_len,
-                 train_ratio=0.7, valid_ratio=0.1, test_ratio=0.2):
-
+                 train_ratio=0.7, valid_ratio=0.1):
         self.data_x = np.load(data_path)
-        self.data_y = np.load(labels_path)
+        total_len = self.data_x.shape[0]
+        shuffled_indices = np.random.randint(0, total_len-1, size=total_len-1)
+        self.data_x = self.data_x[shuffled_indices]
+        self.data_y = np.load(labels_path)[shuffled_indices]
         self.max_len = max_len
-        # self.train_test_ratio = train_test_ratio
-        self.train_ratio = train_ratio
-        self.valid_ratio = valid_ratio
-        self.test_ratio = test_ratio
+        self.train_size = int(len(self.data_x) * train_ratio)
+        self.valid_size = int(len(self.data_x) * (train_ratio + valid_ratio))
         self.adj = utils.get_sentiment_adjacency_matrix(self.max_len)
         self.adj_list = constructions.adj2list(self.adj, torch.from_numpy)
 
-    def __len__(self, add_val_len=False):
-        if not add_val_len:
-            return int(len(self.data_x) * self.train_ratio)
-        else:
-            int(len(self.data_x) * (self.train_ratio + self.valid_ratio))
+    def __len__(self):
+        return self.train_size
 
     def __getitem__(self, idx):
         return self.data_x[idx], self.data_y[idx]
 
     def get_train_set(self):
-        return torch.from_numpy(self.data_x[:self.__len__()]), torch.from_numpy(self.data_y[:self.__len__()])
+        return torch.from_numpy(self.data_x[:self.train_size]), torch.from_numpy(self.data_y[:self.train_size])
 
     def get_valid_set(self):
-        return torch.from_numpy(self.data_x[self.__len__():self.__len__(True)]), \
-               torch.from_numpy(self.data_y[self.__len__():self.__len__(True)])
+        return torch.from_numpy(self.data_x[self.train_size:self.valid_size]), \
+               torch.from_numpy(self.data_y[self.train_size:self.valid_size])
 
     def get_test_set(self):
-        return torch.from_numpy(self.data_x[self.__len__(True):]), torch.from_numpy(self.data_y[self.__len__(True):])
+        return torch.from_numpy(self.data_x[self.valid_size:]), torch.from_numpy(self.data_y[self.valid_size:])

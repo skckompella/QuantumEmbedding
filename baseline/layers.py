@@ -36,7 +36,6 @@ class FeatureExtractor(nn.Module):
         self.dropout = nn.Dropout(p=dropout)
         self.softmax = nn.LogSoftmax()
 
-
     def forward(self, x, add_dropout=True):
         out1 = self.layer1(x)
         out2 = self.layer2(out1)

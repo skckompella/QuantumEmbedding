@@ -127,23 +127,31 @@ class coraDataset(Dataset):
 
 class SentimentDataset(Dataset):
 
-    def __init__(self, data_path, labels_path, max_len, train_test_ratio=0.8):
-
+    def __init__(self, data_path, labels_path, max_len,
+                 train_ratio=0.7, valid_ratio=0.1):
         self.data_x = np.load(data_path)
-        self.data_y = np.load(labels_path)
+        total_len = self.data_x.shape[0]
+        shuffled_indices = np.random.randint(0, total_len-1, size=total_len-1)
+        self.data_x = self.data_x[shuffled_indices]
+        self.data_y = np.load(labels_path)[shuffled_indices]
         self.max_len = max_len
-        self.train_test_ratio = train_test_ratio
+        self.train_size = int(len(self.data_x) * train_ratio)
+        self.valid_size = int(len(self.data_x) * (train_ratio + valid_ratio))
         self.adj = utils.get_sentiment_adjacency_matrix(self.max_len)
         self.adj_list = constructions.adj2list(self.adj, torch.from_numpy)
 
     def __len__(self):
-        return int(len(self.data_x) * self.train_test_ratio)
+        return self.train_size
 
     def __getitem__(self, idx):
         return self.data_x[idx], self.data_y[idx]
 
     def get_train_set(self):
-        return torch.from_numpy(self.data_x[:self.__len__()]), torch.from_numpy(self.data_y[:self.__len__()])
+        return torch.from_numpy(self.data_x[:self.train_size]), torch.from_numpy(self.data_y[:self.train_size])
+
+    def get_valid_set(self):
+        return torch.from_numpy(self.data_x[self.train_size:self.valid_size]), \
+               torch.from_numpy(self.data_y[self.train_size:self.valid_size])
 
     def get_test_set(self):
-        return torch.from_numpy(self.data_x[self.__len__():]), torch.from_numpy(self.data_y[self.__len__():])
+        return torch.from_numpy(self.data_x[self.valid_size:]), torch.from_numpy(self.data_y[self.valid_size:])

@@ -3,7 +3,7 @@ import numpy as np
 
 
 params={
-    'logging':True,
+    'do_logging':True,
     'epochs':10,
     'batch_size':16,
     'ongpu':False,
@@ -14,7 +14,7 @@ params={
     'shuffleNodes':True,
     'experiment':'sentiment'}
 
-results=np.zeros((5,1,4,1,1))
+results=np.zeros((1,1,4,1,1))
 losses=[]
 for trial in range(1):
     i=0

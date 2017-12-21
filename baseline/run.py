@@ -16,7 +16,7 @@ def run_baseline():
                         format='%(asctime)s %(message)s')
 
     sentiment_data = datasets.SentimentDataset(constants.SENTIMENT_DATA_PATH, constants.SENTIMENT_LABELS_PATH,
-                                               constants.MAX_LEN)
+                                               constants.MAX_LEN, constants.TRAIN_RATIO, constants.VALID_RATIO)
     sentiment_loader = DataLoader(sentiment_data, batch_size=constants.BATCH_SIZE, shuffle=True, num_workers=1)
 
     test_data, test_labels = sentiment_data.get_test_set()
@@ -51,10 +51,6 @@ def run_baseline():
 
             running_loss += train_loss.data[0]
             running_acc += utils.get_accuracy(train_predictions, y)
-
-        # print "------------------------------------"
-        # print "Epoch: %d Loss: %.3f Accuracy: %.3f" % (
-        # epoch + 1, running_loss / len(sentiment_loader), running_acc / len(sentiment_loader))
 
         test_predictions = model.test(test_data)
         message = "Test Accuracy: %f" % utils.get_accuracy(test_predictions, test_labels)

@@ -1,4 +1,4 @@
-from  __future__ import division
+from __future__ import division
 from datetime import datetime
 
 import torch.optim as optim
@@ -8,15 +8,16 @@ from common import constants
 from layers import *
 from model.datasets import *
 import pickle
+import logging
 
 
 class SentimentNet(nn.Module):
     def __init__(self, word_to_idx, embedding_size,
-                 adj, qw_network="qw1c", num_walkers=None, learn_coin=True, learn_amps=False, onGPU=False,
+                 adj, qw_network="qw", num_walkers=None, learn_coin=True, learn_amps=False, onGPU=False,
                  time_steps=1):
         super(SentimentNet, self).__init__()
         self.word_to_idx = word_to_idx
-        print "length", len(self.word_to_idx)
+        # print "length", len(self.word_to_idx)
         self.NULL_IDX = 0
         self.embedding = nn.Embedding(len(self.word_to_idx), embedding_size, padding_idx=self.NULL_IDX)
 
@@ -42,36 +43,30 @@ class SentimentNet(nn.Module):
         return x
 
 
-def doExperiment(experiment, qw_network, embedding_size=128, logging=False, epochs=32, batch_size=16,
+def doExperiment(experiment, qw_network, embedding_size=128, do_logging=False, epochs=32, batch_size=16,
                  ongpu=True, learn_amps=True, learn_coin=True, walk_length=4,
                  train_ratio=0.5, feature_dropout=0.0, walkers=None,
                  shuffleEx=True, shuffleNodes=True):
-    print "\nStarting Experiment with Parameters:", [experiment, qw_network, walk_length, learn_amps, learn_coin]
+    logging.basicConfig(filename=constants.LOGS_DIR + "/qw/qw" + datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ".log",
+                        level=logging.INFO,
+                        format="%(asctime)s %(message)s")
 
-    data = None
-    net = None
-    criterion = None
-    f = None
+    if do_logging:
+        message = "Starting Experiment with Parameters:", [experiment, qw_network, walk_length, learn_amps, learn_coin]
+        logging.info(message)
 
     with open(constants.WORD_TO_IDX_PATH, "rb") as w_idx_fp:
         word_to_idx = pickle.load(w_idx_fp)
 
-    # Load Data and set experiment specific parameters
-    if experiment == "sentiment":
-        data = SentimentDataset(constants.SENTIMENT_DATA_PATH, constants.SENTIMENT_LABELS_PATH, constants.MAX_LEN,
-                                constants.TRAIN_RATIO)
-        net = SentimentNet(word_to_idx, embedding_size, data.adj_list, qw_network, constants.MAX_LEN, learn_coin, learn_amps, ongpu, walk_length)
-        criterion = nn.NLLLoss()
+    data = SentimentDataset(constants.SENTIMENT_DATA_PATH, constants.SENTIMENT_LABELS_PATH, constants.MAX_LEN,
+                            constants.TRAIN_RATIO, constants.VALID_RATIO)
+    net = SentimentNet(word_to_idx, embedding_size, data.adj_list, qw_network, constants.MAX_LEN, learn_coin,
+                       learn_amps, ongpu, walk_length)
+    criterion = nn.NLLLoss()
 
-    opt = optim.RMSprop(net.parameters(), lr=1e-2)
+    opt = optim.RMSprop(net.parameters(), lr=3e-3)
 
-    print "Beginning Traning.."
     bestvalid = 1000
-    if logging:
-        f = open('results/' +
-                 datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "Results-" + experiment + "-" + qw_network + "-" + str(
-                    learn_amps) + "-" + str(
-                    learn_coin) + "-" + str(walk_length) + "-" + str(walkers) + ".log", "a+")
     dloader = DataLoader(data, batch_size=batch_size, shuffle=True, num_workers=1)
     los = []
 
@@ -84,7 +79,7 @@ def doExperiment(experiment, qw_network, embedding_size=128, logging=False, epoc
             else:
                 x, y = Variable(x, requires_grad=False), Variable(y, requires_grad=False)
 
-            opt.zero_grad()  # zero the gradient buffers
+            opt.zero_grad()
             output = net.forward(x)
             loss = criterion(output, y)
             loss.backward()
@@ -92,9 +87,11 @@ def doExperiment(experiment, qw_network, embedding_size=128, logging=False, epoc
 
             running_loss += loss.data[0]
             running_acc += utils.get_accuracy(output.max(1)[1], y)
-        print "------------------------------------"
-        print "Epoch: %d Loss: %.3f Accuracy: %.3f" % (iter + 1, running_loss / len(dloader), running_acc / len(dloader))
 
+        if do_logging:
+            message = "Train: Epoch: %d Loss: %.3f Accuracy: %.3f" % (
+                iter + 1, running_loss / len(dloader), running_acc / len(dloader))
+            logging.info(message)
         x, y = data.get_valid_set()
         if ongpu:
             x, y = Variable(x.cuda(), requires_grad=False), Variable(y.cuda(), requires_grad=False)
@@ -102,16 +99,18 @@ def doExperiment(experiment, qw_network, embedding_size=128, logging=False, epoc
             x, y = Variable(x, requires_grad=False), Variable(y, requires_grad=False)
 
         out = net.forward(x)
-        # print out.shape
         validation_loss = criterion(out, y).data[0]
         los.append(validation_loss)
         _, preds = out.max(1)
-        print "Validation Loss: %.3f, Validation Accuracy: %f" % (validation_loss, utils.get_accuracy(preds, y))
-        if logging:
-            f.write(" Validattion Loss: " + str(validation_loss) + "\n")
+
+        if do_logging:
+            message = "Validation Loss: %.3f, Validation Accuracy: %f" % (validation_loss, utils.get_accuracy(preds, y))
+            logging.info(message)
+
         if validation_loss < bestvalid:
             bestvalid = validation_loss
 
+    exit()
     x_test, y_test = data.get_test_set()
     if ongpu:
         x_test, y_test = Variable(x_test.cuda(), requires_grad=False), Variable(y_test.cuda(), requires_grad=False)
@@ -120,10 +119,9 @@ def doExperiment(experiment, qw_network, embedding_size=128, logging=False, epoc
 
     out = net.forward(x_test)
     _, preds = out.max(1)
-    print "Test Accuracy: %f" % (utils.get_accuracy(preds, y_test))
-
-    if logging:
-        f.close()
+    if do_logging:
+        message = "Test Accuracy: %f" % (utils.get_accuracy(preds, y_test))
+        logging.info(message)
 
     return bestvalid, los
 
