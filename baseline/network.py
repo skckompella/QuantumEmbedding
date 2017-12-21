@@ -23,8 +23,8 @@ class Baseline:
         self.mlp = layers.FeatureExtractor(self.encoder_hsz*self.seq_max_len, 2)
 
         self.optims = {
-            'encoder': optim.Adam(self.encoder.parameters()),
-            'mlp': optim.Adam(self.mlp.parameters())
+            'encoder': optim.Adam(self.encoder.parameters(), lr=1e-5),
+            'mlp': optim.Adam(self.mlp.parameters(), lr=1e-5)
         }
         self.criterion = nn.NLLLoss()
 

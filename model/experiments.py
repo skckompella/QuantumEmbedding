@@ -64,7 +64,7 @@ def doExperiment(experiment, qw_network, embedding_size=128, do_logging=False, e
                        learn_amps, ongpu, walk_length)
     criterion = nn.NLLLoss()
 
-    opt = optim.RMSprop(net.parameters(), lr=3e-3)
+    opt = optim.RMSprop(net.parameters(), lr=1e-5)
 
     bestvalid = 1000
     dloader = DataLoader(data, batch_size=batch_size, shuffle=True, num_workers=1)
