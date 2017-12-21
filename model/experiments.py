@@ -66,7 +66,7 @@ def doExperiment(experiment, qw_network, embedding_size=128, logging=False, epoc
     opt = optim.RMSprop(net.parameters(), lr=1e-2)
 
     print "Beginning Traning.."
-    besttest = 1000
+    bestvalid = 1000
     if logging:
         f = open('results/' +
                  datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "Results-" + experiment + "-" + qw_network + "-" + str(
@@ -95,27 +95,37 @@ def doExperiment(experiment, qw_network, embedding_size=128, logging=False, epoc
         print "------------------------------------"
         print "Epoch: %d Loss: %.3f Accuracy: %.3f" % (iter + 1, running_loss / len(dloader), running_acc / len(dloader))
 
-        x, y = data.get_test_set()
+        x, y = data.get_valid_set()
         if ongpu:
             x, y = Variable(x.cuda(), requires_grad=False), Variable(y.cuda(), requires_grad=False)
         else:
             x, y = Variable(x, requires_grad=False), Variable(y, requires_grad=False)
 
         out = net.forward(x)
-
-        testloss = criterion(out, y).data[0]
-        los.append(testloss)
+        # print out.shape
+        validation_loss = criterion(out, y).data[0]
+        los.append(validation_loss)
         _, preds = out.max(1)
-        print "Test Loss: %.3f, Test Accuracy: %f" % (testloss, utils.get_accuracy(preds, y))
+        print "Validation Loss: %.3f, Validation Accuracy: %f" % (validation_loss, utils.get_accuracy(preds, y))
         if logging:
-            f.write(" Test Loss: " + str(testloss) + "\n")
-        if testloss < besttest:
-            besttest = testloss
+            f.write(" Validattion Loss: " + str(validation_loss) + "\n")
+        if validation_loss < bestvalid:
+            bestvalid = validation_loss
+
+    x_test, y_test = data.get_test_set()
+    if ongpu:
+        x_test, y_test = Variable(x_test.cuda(), requires_grad=False), Variable(y_test.cuda(), requires_grad=False)
+    else:
+        x_test, y_test = Variable(x_test, requires_grad=False), Variable(y_test, requires_grad=False)
+
+    out = net.forward(x_test)
+    _, preds = out.max(1)
+    print "Test Accuracy: %f" % (utils.get_accuracy(preds, y_test))
 
     if logging:
         f.close()
 
-    return besttest, los
+    return bestvalid, los
 
 
 if __name__ == "__main__":

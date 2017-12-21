@@ -4,7 +4,7 @@ import numpy as np
 
 params={
     'logging':True,
-    'epochs':128,
+    'epochs':10,
     'batch_size':16,
     'ongpu':False,
     'train_ratio':0.5,
@@ -16,7 +16,7 @@ params={
 
 results=np.zeros((5,1,4,1,1))
 losses=[]
-for trial in range(5):
+for trial in range(1):
     i=0
     for network in ['qw1c']:#,'dc']:
         params['qw_network']=network
@@ -35,11 +35,11 @@ for trial in range(5):
                     results[trial,i,j,k,l],los=doExperiment(**params)
                     losses.append(los)
                     np.save('results1c',results)
-                    # if network!='qw':
-                    #     break
+                    if network!='qw':
+                        break
                     l+=1
-                # if network!='qw':
-                #     break
+                if network!='qw':
+                    break
                 k+=1
             j+=1
         i+=1

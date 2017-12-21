@@ -27,19 +27,22 @@ class RNNEncoder(nn.Module):
 
 
 class FeatureExtractor(nn.Module):
-    def __init__(self, input_size, output_size):
+    def __init__(self, input_size, output_size, dropout=0.1):
         super(FeatureExtractor, self).__init__()
 
         self.layer1 = nn.Linear(input_size, 128)
         self.layer2 = nn.Linear(128, 64)
         self.layer3 = nn.Linear(64, output_size)
+        self.dropout = nn.Dropout(p=dropout)
         self.softmax = nn.LogSoftmax()
 
-    def forward(self, x):
+
+    def forward(self, x, add_dropout=True):
         out1 = self.layer1(x)
         out2 = self.layer2(out1)
         out3 = self.layer3(out2)
-        scores = self.softmax(out3)
+        out4 = self.dropout(out3)
+        scores = self.softmax(out4)
 
         return scores
 

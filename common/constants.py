@@ -4,7 +4,7 @@ TRAIN_RATIO = 0.9
 BATCH_SIZE = 16
 GPU = False
 
-ROOT_DIR = "/Users/BatComp/Desktop/UMass/Courses/691 - Quantum/QuantumEmbedding"
+ROOT_DIR = "../"
 PROCESSED_DATA_DIR = ROOT_DIR + "/data/processed"
 TEXT_CORPORA_DIR = ROOT_DIR + "/data/text_corpora"
 LOGS_DIR = ROOT_DIR + "/logs"
